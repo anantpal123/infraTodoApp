@@ -1,76 +1,95 @@
 trigger: none
 
-pool: anantpool
+pool:
+  name: anantpool
 
 jobs:
-- job: firstjob # Required as first property. ID of the job.
-  displayName: Terraform init # Human-readable name for the job.
- 
-  steps: 
+# -----------------------------------
+# Job 1: Terraform Init & Validate
+# -----------------------------------
+- job: firstjob
+  displayName: Terraform Init & Validate
+  steps:
+
   - task: TerraformInstaller@1
     inputs:
       terraformVersion: 'latest'
-  - task: TerraformTask@5
-    displayName: initwa
-    inputs:
-      provider: 'azurerm'
-      command: 'init'
-      workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
-      backendServiceArm: 'anantconnection'
-      backendAzureRmResourceGroupName: 'anant-dev-rg1'
-      backendAzureRmStorageAccountName: 'anantstorageact'
-      backendAzureRmContainerName: 'anantcontainer'
-      backendAzureRmKey: 'anant-terraform.tfstate'
-#   - task: TerraformTask@5
-#     inputs:
-#       provider: 'azurerm'
-#       command: 'validate'
-#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
-#   - task: TerraformTask@5
-#     inputs:
-#       provider: 'azurerm'
-#       command: 'plan'
-#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
-#       environmentServiceNameAzureRM: 'sc'
-      
-# - job: securityscan_job
-#   displayName: securityscan
-#   dependsOn: firstjob
-#   pool: Hosted Agent
-#   steps:
-#   - task: tfsec@1
-#     inputs:
-#       version: 'v1.26.0'
-#       dir: '$(System.DefaultWorkingDirectory)/environments/dev'
 
-# - job: secondjob
-#   displayName: manualapproval
-#   dependsOn: securityscan_job
-#   pool: server
-#   steps:
-#   - task: ManualValidation@1
-#     inputs:
-#       notifyUsers: 'chandrapratap.smsit@gmail.com'
-# - job: thirdjob
-#   displayName: terraformapply
-#   pool: agentpool
-#   dependsOn: secondjob
-#   steps:
-#   - task: TerraformInstaller@1
-#     inputs:
-#       terraformVersion: 'latest'
-#   - task: TerraformTask@5
-#     inputs:
-#       provider: 'azurerm'
-#       command: 'init'
-#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
-#       backendServiceArm: 'sc'
-#       backendAzureRmStorageAccountName: 'bhushan123'
-#       backendAzureRmContainerName: 'tfstate'
-#       backendAzureRmKey: 'dev-terraform.tfstate'
-#   - task: TerraformTask@5
-#     inputs:
-#       provider: 'azurerm'
-#       command: 'apply'
-#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
-#       environmentServiceNameAzureRM: 'sc'
+  - task: TerraformTask@5
+    displayName: Terraform Init
+    inputs:
+      provider: azurerm
+      command: init
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      backendServiceArm: anantconnection
+      backendAzureRmResourceGroupName: anant-dev-rg1
+      backendAzureRmStorageAccountName: anantstorageact
+      backendAzureRmContainerName: anantcontainer
+      backendAzureRmKey: anant-terraform.tfstate
+
+  - task: TerraformTask@5
+    displayName: Terraform Validate
+    inputs:
+      provider: azurerm
+      command: validate
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+
+  - task: TerraformTask@5
+    displayName: Terraform Plan
+    inputs:
+      provider: azurerm
+      command: plan
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      environmentServiceNameAzureRM: anantconnection
+
+# -----------------------------------
+# Job 2: Security Scan (tfsec)
+# -----------------------------------
+- job: securityscan_job
+  displayName: tfsec Security Scan
+  dependsOn: firstjob
+  steps:
+
+  - powershell: |
+      $version = "v1.28.1"
+      $url = "https://github.com/aquasecurity/tfsec/releases/download/$version/tfsec-windows-amd64.exe"
+      $path = "$env:AGENT_TEMPDIRECTORY\tfsec.exe"
+
+      Invoke-WebRequest $url -OutFile $path
+      Move-Item $path "C:\Windows\System32\tfsec.exe" -Force
+      tfsec --version
+    displayName: Install tfsec
+
+  - powershell: |
+      cd "$(System.DefaultWorkingDirectory)\environments\dev"
+      tfsec . --soft-fail
+    displayName: Run tfsec scan
+
+# -----------------------------------
+# Job 3: Manual Approval
+# -----------------------------------
+- job: secondjob
+  displayName: Manual Approval
+  dependsOn: securityscan_job
+  pool: server
+  steps:
+  - task: ManualValidation@1
+    inputs:
+      notifyUsers: chandrapratap.smsit@gmail.com
+      instructions: 'Please approve Terraform Apply'
+
+# -----------------------------------
+# Job 4: Terraform Apply
+# -----------------------------------
+- job: thirdjob
+  displayName: Terraform Apply
+  dependsOn: secondjob
+  steps:
+
+  - task: TerraformTask@5
+    displayName: Terraform Apply
+    inputs:
+      provider: azurerm
+      command: apply
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      environmentServiceNameAzureRM: anantconnection
