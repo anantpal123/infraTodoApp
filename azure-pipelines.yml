@@ -1,19 +1,78 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+trigger: none
 
-trigger:
-- main
-
+ # pool: Hosted Agent
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+jobs:
+- job: firstjob # Required as first property. ID of the job.
+  displayName: Terraform init # Human-readable name for the job.
+ 
+  steps: 
+  - task: TerraformInstaller@1
+    inputs:
+      terraformVersion: 'latest'
+  - task: TerraformTask@5
+    displayName: initwa
+    inputs:
+      provider: 'azurerm'
+      command: 'init'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+      backendServiceArm: 'anantconnection'
+      backendAzureRmResourceGroupName: 'anant-dev-rg1'
+      backendAzureRmStorageAccountName: 'anantstorageact'
+      backendAzureRmContainerName: 'anantcontainer'
+      backendAzureRmKey: 'anant-terraform.tfstate'
+#   - task: TerraformTask@5
+#     inputs:
+#       provider: 'azurerm'
+#       command: 'validate'
+#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+#   - task: TerraformTask@5
+#     inputs:
+#       provider: 'azurerm'
+#       command: 'plan'
+#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+#       environmentServiceNameAzureRM: 'sc'
+      
+# - job: securityscan_job
+#   displayName: securityscan
+#   dependsOn: firstjob
+#   pool: Hosted Agent
+#   steps:
+#   - task: tfsec@1
+#     inputs:
+#       version: 'v1.26.0'
+#       dir: '$(System.DefaultWorkingDirectory)/environments/dev'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+# - job: secondjob
+#   displayName: manualapproval
+#   dependsOn: securityscan_job
+#   pool: server
+#   steps:
+#   - task: ManualValidation@1
+#     inputs:
+#       notifyUsers: 'chandrapratap.smsit@gmail.com'
+# - job: thirdjob
+#   displayName: terraformapply
+#   pool: agentpool
+#   dependsOn: secondjob
+#   steps:
+#   - task: TerraformInstaller@1
+#     inputs:
+#       terraformVersion: 'latest'
+#   - task: TerraformTask@5
+#     inputs:
+#       provider: 'azurerm'
+#       command: 'init'
+#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+#       backendServiceArm: 'sc'
+#       backendAzureRmStorageAccountName: 'bhushan123'
+#       backendAzureRmContainerName: 'tfstate'
+#       backendAzureRmKey: 'dev-terraform.tfstate'
+#   - task: TerraformTask@5
+#     inputs:
+#       provider: 'azurerm'
+#       command: 'apply'
+#       workingDirectory: '$(System.DefaultWorkingDirectory)/environments/dev'
+#       environmentServiceNameAzureRM: 'sc'
