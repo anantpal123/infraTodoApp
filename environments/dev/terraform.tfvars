@@ -235,7 +235,7 @@ vm_nsg_associations = {
 //         storage_permissions = [
 //           "Get",
 //         ]
-      }
+      // }
     }
   }
 }
