@@ -50,6 +50,6 @@ variable "mssql_databases" {}
 variable "vms" {}
 variable "nsgs" {}
 variable "vm_nsg_associations" {}
-variable "kvs" {}
+#variable "kvs" {}
 
   
