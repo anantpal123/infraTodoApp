@@ -1,8 +1,6 @@
 trigger: none
 
- # pool: Hosted Agent
-pool:
-  vmImage: 'ubuntu-latest'
+pool: anantpool
 
 jobs:
 - job: firstjob # Required as first property. ID of the job.
