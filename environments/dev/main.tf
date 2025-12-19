@@ -45,10 +45,10 @@ module "vm_nsg_associations" {
   vm_nsg_associations = var.vm_nsg_associations
 }
 
- module "kvs" {
-   depends_on    = [module.rg, module.mssql_databases, module.pip, module.vnet, module.vm]
-    source = "../../modules/azurerm_keyvault"
-    kvs = var.kvs
-  }
+//  module "kvs" {
+//    depends_on    = [module.rg, module.mssql_databases, module.pip, module.vnet, module.vm]
+//     source = "../../modules/azurerm_keyvault"
+//     kvs = var.kvs
+//   }
 
 
