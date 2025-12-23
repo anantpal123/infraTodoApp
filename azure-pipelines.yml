@@ -4,7 +4,7 @@ pool:
   name: anantpool
 
 jobs:
-- job: TFLint
+- job: firstjob
   displayName: Terraform Lint (TFLint)
   steps:
   - task: PowerShell@2
@@ -38,7 +38,7 @@ jobs:
         & "$(Agent.ToolsDirectory)\tflint\tflint.exe"
 
 
-- job: firstjob
+- job: secondjob
   displayName: Terraform Init & Validate
   steps: 
   - task: TerraformInstaller@1
@@ -74,7 +74,7 @@ jobs:
       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
       environmentServiceNameAzureRM: anantconnection
 
-- job: securityscan_job
+- job: Thirdjob
   displayName: tfsec Security Scan
   dependsOn: firstjob
   steps:
@@ -84,9 +84,9 @@ jobs:
       dir: '$(System.DefaultWorkingDirectory)\environments\dev'
 
 
-- job: secondjob
+- job: 
   displayName: Manual Approval
-  dependsOn: securityscan_job
+  dependsOn: Thirdjob
   pool: server
   steps:
   - task: ManualValidation@1
@@ -97,7 +97,7 @@ jobs:
 # -----------------------------------
 # Job 4: Terraform Apply
 # -----------------------------------
-- job: thirdjob
+- job: fivethjob
   displayName: Terraform Apply
   dependsOn: secondjob
   steps:
