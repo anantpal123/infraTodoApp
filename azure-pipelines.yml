@@ -36,82 +36,75 @@ jobs:
       script: |
         cd $(System.DefaultWorkingDirectory)/environments/dev
         & "$(Agent.ToolsDirectory)\tflint\tflint.exe"
+
+
+- job: firstjob
+  displayName: Terraform Init & Validate
+  steps:
+
+  - task: TerraformInstaller@1
+    inputs:
+      terraformVersion: 'latest'
+
+  - task: TerraformTask@5
+    displayName: Terraform Init
+    inputs:
+      provider: azurerm
+      command: init
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      backendServiceArm: anantconnection
+      backendAzureRmResourceGroupName: anant-dev-rg1
+      backendAzureRmStorageAccountName: anantstorageact
+      backendAzureRmContainerName: anantcontainer
+      backendAzureRmKey: anant-terraform.tfstate
+
+  - task: TerraformTask@5
+    displayName: Terraform Validate
+    inputs:
+      provider: azurerm
+      command: validate
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+
+  - task: TerraformTask@5
+    displayName: Terraform Plan
+    inputs:
+      provider: azurerm
+      command: plan
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      environmentServiceNameAzureRM: anantconnection
+
+- job: securityscan_job
+  displayName: tfsec Security Scan
+  dependsOn: firstjob
+  steps:
+  - task: tfsec@1
+    inputs:
+      version: 'v1.26.0'
+      dir: '$(System.DefaultWorkingDirectory)\environments\dev'
+
+
+- job: secondjob
+  displayName: Manual Approval
+  dependsOn: securityscan_job
+  pool: server
+  steps:
+  - task: ManualValidation@1
+    inputs:
+      notifyUsers: chandrapratap.smsit@gmail.com
+      instructions: 'Please approve Terraform Apply'
+
 # -----------------------------------
-# Job 1: Terraform Init & Validate
+# Job 4: Terraform Apply
 # -----------------------------------
-# - job: firstjob
-#   displayName: Terraform Init & Validate
-#   steps:
+- job: thirdjob
+  displayName: Terraform Apply
+  dependsOn: secondjob
+  steps:
 
-#   - task: TerraformInstaller@1
-#     inputs:
-#       terraformVersion: 'latest'
-
-#   - task: TerraformTask@5
-#     displayName: Terraform Init
-#     inputs:
-#       provider: azurerm
-#       command: init
-#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-#       backendServiceArm: anantconnection
-#       backendAzureRmResourceGroupName: anant-dev-rg1
-#       backendAzureRmStorageAccountName: anantstorageact
-#       backendAzureRmContainerName: anantcontainer
-#       backendAzureRmKey: anant-terraform.tfstate
-
-#   - task: TerraformTask@5
-#     displayName: Terraform Validate
-#     inputs:
-#       provider: azurerm
-#       command: validate
-#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-
-#   - task: TerraformTask@5
-#     displayName: Terraform Plan
-#     inputs:
-#       provider: azurerm
-#       command: plan
-#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-#       environmentServiceNameAzureRM: anantconnection
-
-# -----------------------------------
-# Job 2: Security Scan (tfsec)
-# -----------------------------------
-# - job: securityscan_job
-#   displayName: tfsec Security Scan
-#   dependsOn: firstjob
-#   steps:
-#   - task: tfsec@1
-#     inputs:
-#       version: 'v1.26.0'
-#       dir: '$(System.DefaultWorkingDirectory)\environments\dev'
-
-
-# -----------------------------------
-# Job 3: Manual Approval
-# -----------------------------------
-# - job: secondjob
-#   displayName: Manual Approval
-#   dependsOn: securityscan_job
-#   pool: server
-#   steps:
-#   - task: ManualValidation@1
-#     inputs:
-#       notifyUsers: chandrapratap.smsit@gmail.com
-#       instructions: 'Please approve Terraform Apply'
-
-# # -----------------------------------
-# # Job 4: Terraform Apply
-# # -----------------------------------
-# - job: thirdjob
-#   displayName: Terraform Apply
-#   dependsOn: secondjob
-#   steps:
-
-#   - task: TerraformTask@5
-#     displayName: Terraform Apply
-#     inputs:
-#       provider: azurerm
-#       command: apply
-#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-#       environmentServiceNameAzureRM: anantconnection
+  - task: TerraformTask@5
+    displayName: Terraform Apply
+    inputs:
+      provider: azurerm
+      command: apply
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      environmentServiceNameAzureRM: anantconnection
