@@ -49,47 +49,37 @@ jobs:
   displayName: tfsec Security Scan
   dependsOn: firstjob
   steps:
+  - task: tfsec@1
+    inputs:
+      version: 'v1.26.0'
+      dir: '$(System.DefaultWorkingDirectory)\environments\dev'
 
-  - powershell: |
-      $version = "v1.28.1"
-      $url = "https://github.com/aquasecurity/tfsec/releases/download/$version/tfsec-windows-amd64.exe"
-      $path = "$env:AGENT_TEMPDIRECTORY\tfsec.exe"
-
-      Invoke-WebRequest $url -OutFile $path
-      Move-Item $path "C:\Windows\System32\tfsec.exe" -Force
-      tfsec --version
-    displayName: Install tfsec
-
-  - powershell: |
-      cd "$(System.DefaultWorkingDirectory)\environments\dev"
-      tfsec . --soft-fail
-    displayName: Run tfsec scan
 
 # -----------------------------------
 # Job 3: Manual Approval
 # -----------------------------------
-- job: secondjob
-  displayName: Manual Approval
-  dependsOn: securityscan_job
-  pool: server
-  steps:
-  - task: ManualValidation@1
-    inputs:
-      notifyUsers: chandrapratap.smsit@gmail.com
-      instructions: 'Please approve Terraform Apply'
+# - job: secondjob
+#   displayName: Manual Approval
+#   dependsOn: securityscan_job
+#   pool: server
+#   steps:
+#   - task: ManualValidation@1
+#     inputs:
+#       notifyUsers: chandrapratap.smsit@gmail.com
+#       instructions: 'Please approve Terraform Apply'
 
-# -----------------------------------
-# Job 4: Terraform Apply
-# -----------------------------------
-- job: thirdjob
-  displayName: Terraform Apply
-  dependsOn: secondjob
-  steps:
+# # -----------------------------------
+# # Job 4: Terraform Apply
+# # -----------------------------------
+# - job: thirdjob
+#   displayName: Terraform Apply
+#   dependsOn: secondjob
+#   steps:
 
-  - task: TerraformTask@5
-    displayName: Terraform Apply
-    inputs:
-      provider: azurerm
-      command: apply
-      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-      environmentServiceNameAzureRM: anantconnection
+#   - task: TerraformTask@5
+#     displayName: Terraform Apply
+#     inputs:
+#       provider: azurerm
+#       command: apply
+#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+#       environmentServiceNameAzureRM: anantconnection
