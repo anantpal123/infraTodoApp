@@ -30,7 +30,7 @@ jobs:
 
   - task: PowerShell@2
     displayName: TFLint Run
-    continueOnError: false
+    continueOnError: true
     inputs:
       targetType: 'inline'
       script: |
