@@ -40,7 +40,22 @@ jobs:
 
 - job: firstjob
   displayName: Terraform Init & Validate
-  steps:
+  steps: 
+  - task: TerraformInstaller@1
+    inputs:
+      terraformVersion: 'latest'
+
+  - task: TerraformTask@5
+    displayName: Terraform Init
+    inputs:
+      provider: azurerm
+      command: init
+      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+      backendServiceArm: anantconnection
+      backendAzureRmResourceGroupName: anant-dev-rg1
+      backendAzureRmStorageAccountName: anantstorageact
+      backendAzureRmContainerName: anantcontainer
+      backendAzureRmKey: anant-terraform.tfstate
 
 
 
