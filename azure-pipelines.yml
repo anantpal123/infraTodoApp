@@ -4,55 +4,87 @@ pool:
   name: anantpool
 
 jobs:
+- job: TFLint
+  displayName: Terraform Lint (TFLint)
+  steps:
+  - task: PowerShell@2
+    displayName: Download TFLint
+    inputs:
+      targetType: 'inline'
+      script: |
+        $version = "0.50.3"
+        $url = "https://github.com/terraform-linters/tflint/releases/download/v$version/tflint_windows_amd64.zip"
+        $dest = "$(Agent.ToolsDirectory)\tflint"
+        New-Item -ItemType Directory -Force -Path $dest
+        Invoke-WebRequest -Uri $url -OutFile "$dest\tflint.zip"
+        Expand-Archive -Path "$dest\tflint.zip" -DestinationPath $dest -Force
+        & "$dest\tflint.exe" --version
+
+  - task: PowerShell@2
+    displayName: TFLint Init
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(System.DefaultWorkingDirectory)/environments/dev
+        & "$(Agent.ToolsDirectory)\tflint\tflint.exe" --init
+
+  - task: PowerShell@2
+    displayName: TFLint Run
+    continueOnError: false
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(System.DefaultWorkingDirectory)/environments/dev
+        & "$(Agent.ToolsDirectory)\tflint\tflint.exe"
 # -----------------------------------
 # Job 1: Terraform Init & Validate
 # -----------------------------------
-- job: firstjob
-  displayName: Terraform Init & Validate
-  steps:
+# - job: firstjob
+#   displayName: Terraform Init & Validate
+#   steps:
 
-  - task: TerraformInstaller@1
-    inputs:
-      terraformVersion: 'latest'
+#   - task: TerraformInstaller@1
+#     inputs:
+#       terraformVersion: 'latest'
 
-  - task: TerraformTask@5
-    displayName: Terraform Init
-    inputs:
-      provider: azurerm
-      command: init
-      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-      backendServiceArm: anantconnection
-      backendAzureRmResourceGroupName: anant-dev-rg1
-      backendAzureRmStorageAccountName: anantstorageact
-      backendAzureRmContainerName: anantcontainer
-      backendAzureRmKey: anant-terraform.tfstate
+#   - task: TerraformTask@5
+#     displayName: Terraform Init
+#     inputs:
+#       provider: azurerm
+#       command: init
+#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+#       backendServiceArm: anantconnection
+#       backendAzureRmResourceGroupName: anant-dev-rg1
+#       backendAzureRmStorageAccountName: anantstorageact
+#       backendAzureRmContainerName: anantcontainer
+#       backendAzureRmKey: anant-terraform.tfstate
 
-  - task: TerraformTask@5
-    displayName: Terraform Validate
-    inputs:
-      provider: azurerm
-      command: validate
-      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+#   - task: TerraformTask@5
+#     displayName: Terraform Validate
+#     inputs:
+#       provider: azurerm
+#       command: validate
+#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
 
-  - task: TerraformTask@5
-    displayName: Terraform Plan
-    inputs:
-      provider: azurerm
-      command: plan
-      workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
-      environmentServiceNameAzureRM: anantconnection
+#   - task: TerraformTask@5
+#     displayName: Terraform Plan
+#     inputs:
+#       provider: azurerm
+#       command: plan
+#       workingDirectory: '$(System.DefaultWorkingDirectory)\environments\dev'
+#       environmentServiceNameAzureRM: anantconnection
 
 # -----------------------------------
 # Job 2: Security Scan (tfsec)
 # -----------------------------------
-- job: securityscan_job
-  displayName: tfsec Security Scan
-  dependsOn: firstjob
-  steps:
-  - task: tfsec@1
-    inputs:
-      version: 'v1.26.0'
-      dir: '$(System.DefaultWorkingDirectory)\environments\dev'
+# - job: securityscan_job
+#   displayName: tfsec Security Scan
+#   dependsOn: firstjob
+#   steps:
+#   - task: tfsec@1
+#     inputs:
+#       version: 'v1.26.0'
+#       dir: '$(System.DefaultWorkingDirectory)\environments\dev'
 
 
 # -----------------------------------
